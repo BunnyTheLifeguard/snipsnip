@@ -9,8 +9,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/BunnyTheLifeguard/snipsnip/pkg/models/mongodb"
+
 	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -19,6 +20,7 @@ import (
 type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
+	snips    *mongodb.SnipModel
 }
 
 func init() {
@@ -31,6 +33,9 @@ func init() {
 
 func main() {
 	port := os.Getenv("PORT")
+	dbName := os.Getenv("DB")
+	collName := os.Getenv("COLLECTION")
+
 	addr := flag.String("addr", port, "HTTP network address")
 	flag.Parse()
 
@@ -39,29 +44,20 @@ func main() {
 
 	// Connect to DB
 	uri := os.Getenv("MONGODB_URI")
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
-	if err != nil {
-		errorLog.Fatal(err)
-	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	err = client.Connect(ctx)
+
+	db, err := openDB(ctx, uri)
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-	defer client.Disconnect(ctx)
-	err = client.Ping(ctx, readpref.Primary())
-	if err != nil {
-		errorLog.Fatal(err)
-	}
-	databases, err := client.ListDatabaseNames(ctx, bson.M{})
-	if err != nil {
-		errorLog.Fatal(err)
-	}
-	fmt.Println(databases)
+	coll := openCollection(db, dbName, collName)
+
+	defer db.Disconnect(ctx)
 
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
+		snips:    &mongodb.SnipModel{Collection: coll},
 	}
 
 	srv := &http.Server{
@@ -73,4 +69,25 @@ func main() {
 	infoLog.Printf("Starting server on %s", *addr)
 	errSrv := srv.ListenAndServe()
 	errorLog.Fatal(errSrv)
+}
+
+func openDB(ctx context.Context, uri string) (*mongo.Client, error) {
+	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+	err = client.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = client.Ping(ctx, readpref.Primary())
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("Connected to MongoDB")
+
+	return client, nil
+}
+
+func openCollection(client *mongo.Client, dbName, collectionName string) *mongo.Collection {
+	coll := client.Database(dbName).Collection(collectionName)
+	return coll
 }

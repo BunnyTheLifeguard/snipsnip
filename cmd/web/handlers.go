@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"strconv"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -32,13 +34,13 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) showSnip(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
-	if err != nil || id < 1 {
+	id := r.URL.Query().Get("id")
+	if id == "" {
 		app.notFound(w)
 		return
 	}
 
-	fmt.Fprintf(w, "Display a specific snip with ID %d...", id)
+	fmt.Fprintf(w, "Display a specific snip with ID %s...", id)
 }
 
 func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
@@ -48,5 +50,16 @@ func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("Create a new snip..."))
+	title := "0 Snip"
+	content := "0 Snip snip!"
+	expires := time.Now().Add(time.Hour * 24 * 7)
+
+	id, err := app.snips.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	oid := id.(primitive.ObjectID).Hex()
+
+	http.Redirect(w, r, fmt.Sprintf("/snip?id=%s", oid), http.StatusSeeOther)
 }
