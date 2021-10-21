@@ -6,7 +6,10 @@ import (
 
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/models"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // SnipModel wraps the db collection
@@ -15,11 +18,12 @@ type SnipModel struct {
 }
 
 // Insert adds a new snip to the DB and returns its ObjectID
-func (m *SnipModel) Insert(title, content string, expires time.Time) (interface{}, error) {
+func (m *SnipModel) Insert(title, content string, created, expires time.Time) (interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	snip := models.Snip{
 		Title:   title,
 		Content: content,
+		Created: created,
 		Expires: expires,
 	}
 	defer cancel()
@@ -34,10 +38,42 @@ func (m *SnipModel) Insert(title, content string, expires time.Time) (interface{
 
 // Get a snip via its ObjectID
 func (m *SnipModel) Get(id string) (*models.Snip, error) {
-	return nil, nil
+	var result *models.Snip
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "_id", Value: oid}}
+	resErr := m.Collection.FindOne(ctx, filter).Decode(&result)
+	if resErr != nil {
+		if resErr == mongo.ErrNoDocuments {
+			return nil, resErr
+		}
+		return nil, resErr
+	}
+
+	return result, err
 }
 
-// Latest shows the last inserted snip
+// Latest shows the most recently created 10 snips unless expired
 func (m *SnipModel) Latest() ([]*models.Snip, error) {
-	return nil, nil
+	var results []*models.Snip
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.D{{"expires", bson.D{{"$gt", time.Now()}}}}
+	opts := options.Find().SetLimit(10)
+	cursor, err := m.Collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	resErr := cursor.All(ctx, &results)
+	if resErr != nil {
+		return nil, resErr
+	}
+
+	return results, nil
 }

@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"time"
 
+	"github.com/BunnyTheLifeguard/snipsnip/pkg/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -15,22 +15,32 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files := []string{
-		"../../ui/html/home.page.tmpl",
-		"../../ui/html/base.layout.tmpl",
-		"../../ui/html/footer.partial.tmpl",
-	}
-
-	ts, err := template.ParseFiles(files...)
+	s, err := app.snips.Latest()
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	err = ts.Execute(w, nil)
-	if err != nil {
-		app.serverError(w, err)
+	for _, snip := range s {
+		fmt.Fprintf(w, "%v\n", snip)
 	}
+
+	// files := []string{
+	// 	"../../ui/html/home.page.tmpl",
+	// 	"../../ui/html/base.layout.tmpl",
+	// 	"../../ui/html/footer.partial.tmpl",
+	// }
+
+	// ts, err := template.ParseFiles(files...)
+	// if err != nil {
+	// 	app.serverError(w, err)
+	// 	return
+	// }
+
+	// err = ts.Execute(w, nil)
+	// if err != nil {
+	// 	app.serverError(w, err)
+	// }
 }
 
 func (app *application) showSnip(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +50,16 @@ func (app *application) showSnip(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Display a specific snip with ID %s...", id)
+	s, err := app.snips.Get(id)
+	if err == models.ErrNoRecord {
+		app.notFound(w)
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	fmt.Fprintf(w, "%v", s)
 }
 
 func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
@@ -50,11 +69,13 @@ func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	title := "0 Snip"
-	content := "0 Snip snip!"
+	//TODO: Dummy data - remove later
+	title := "3 Snip"
+	content := "3 Snip snip!"
+	created := time.Now()
 	expires := time.Now().Add(time.Hour * 24 * 7)
 
-	id, err := app.snips.Insert(title, content, expires)
+	id, err := app.snips.Insert(title, content, created, expires)
 	if err != nil {
 		app.serverError(w, err)
 		return
