@@ -3,4 +3,4 @@
 A small application similar to pastebin.
 Users can paste & share snippets of text.
 
-Built with Go using (mostly)the stdlib.
+Built with Go using (mostly) the stdlib and HTML templating for a simple frontend.
