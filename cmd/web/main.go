@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"text/template"
 	"time"
 
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/models/mongodb"
@@ -18,9 +19,10 @@ import (
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snips    *mongodb.SnipModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snips         *mongodb.SnipModel
+	templateCache map[string]*template.Template
 }
 
 func init() {
@@ -54,10 +56,16 @@ func main() {
 
 	defer db.Disconnect(ctx)
 
+	templateCache, err := newTemplateCache("../../ui/html/")
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		snips:    &mongodb.SnipModel{Collection: coll},
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		snips:         &mongodb.SnipModel{Collection: coll},
+		templateCache: templateCache,
 	}
 
 	srv := &http.Server{

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"text/template"
 	"time"
 
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/models"
@@ -22,24 +21,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := &templateData{Snips: s}
-
-	files := []string{
-		"../../ui/html/home.page.tmpl",
-		"../../ui/html/base.layout.tmpl",
-		"../../ui/html/footer.partial.tmpl",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	err = ts.Execute(w, data)
-	if err != nil {
-		app.serverError(w, err)
-	}
+	app.render(w, r, "home.page.tmpl", &templateData{
+		Snips: s,
+	})
 }
 
 func (app *application) showSnip(w http.ResponseWriter, r *http.Request) {
@@ -58,28 +42,9 @@ func (app *application) showSnip(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create instance of a templateData struct holding the snip data
-	data := &templateData{Snip: s}
-
-	// Initialize template files
-	files := []string{
-		"../../ui/html/show.page.tmpl",
-		"../../ui/html/base.layout.tmpl",
-		"../../ui/html/footer.partial.tmpl",
-	}
-
-	// Parse template files
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	// Execute template files
-	err = ts.Execute(w, data)
-	if err != nil {
-		app.serverError(w, err)
-	}
+	app.render(w, r, "show.page.tmpl", &templateData{
+		Snip: s,
+	})
 }
 
 func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
