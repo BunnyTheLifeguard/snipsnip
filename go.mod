@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/joho/godotenv v1.4.0
+	github.com/justinas/alice v1.2.0
 	go.mongodb.org/mongo-driver v1.7.3
 )
 
