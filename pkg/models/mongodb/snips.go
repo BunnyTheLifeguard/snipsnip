@@ -19,8 +19,11 @@ type SnipModel struct {
 
 // Insert adds a new snip to the DB and returns its ObjectID
 func (m *SnipModel) Insert(title, content string, created, expires time.Time) (interface{}, error) {
+	oid := primitive.NewObjectID()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	snip := models.Snip{
+		OID:     oid,
+		ID:      oid.Hex(),
 		Title:   title,
 		Content: content,
 		Created: created,
