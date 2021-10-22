@@ -3,6 +3,7 @@ package main
 import (
 	"path/filepath"
 	"text/template"
+	"time"
 
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/models"
 )
@@ -11,6 +12,14 @@ type templateData struct {
 	CurrentYear int
 	Snip        *models.Snip
 	Snips       []*models.Snip
+}
+
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 06 15:04 MST")
+}
+
+var functions = template.FuncMap{
+	"humanDate": humanDate,
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {
@@ -28,7 +37,7 @@ func newTemplateCache(dir string) (map[string]*template.Template, error) {
 		name := filepath.Base(page)
 
 		// Parse page template file into template set
-		ts, err := template.ParseFiles(page)
+		ts, err := template.New(name).Funcs(functions).ParseFiles(page)
 		if err != nil {
 			return nil, err
 		}
