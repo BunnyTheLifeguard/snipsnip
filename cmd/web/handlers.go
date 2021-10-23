@@ -6,15 +6,11 @@ import (
 	"time"
 
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/models"
+	"github.com/go-chi/chi/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		app.notFound(w)
-		return
-	}
-
 	s, err := app.snips.Latest()
 	if err != nil {
 		app.serverError(w, err)
@@ -27,7 +23,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) showSnip(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	id := chi.URLParam(r, "id")
 	if id == "" {
 		app.notFound(w)
 		return
@@ -47,13 +43,11 @@ func (app *application) showSnip(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		w.Header().Set("Allow", "POST")
-		app.clientError(w, http.StatusMethodNotAllowed)
-		return
-	}
+func (app *application) createSnipForm(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Create new snip..."))
+}
 
+func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
 	//TODO: Dummy data - remove later
 	title := "3 Snip"
 	content := "3 Snip snip!"
@@ -67,5 +61,5 @@ func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
 	}
 	oid := id.(primitive.ObjectID).Hex()
 
-	http.Redirect(w, r, fmt.Sprintf("/snip?id=%s", oid), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snip/%s", oid), http.StatusSeeOther)
 }
