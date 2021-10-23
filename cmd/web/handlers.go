@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
-	"unicode/utf8"
 
+	"github.com/BunnyTheLifeguard/snipsnip/pkg/forms"
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/models"
 	"github.com/go-chi/chi/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -47,7 +46,9 @@ func (app *application) showSnip(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createSnipForm(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "create.page.tmpl", nil)
+	app.render(w, r, "create.page.tmpl", &templateData{
+		Form: forms.New(nil),
+	})
 }
 
 func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
@@ -57,46 +58,26 @@ func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	title := r.PostForm.Get("title")
-	content := r.PostForm.Get("content")
-	days := r.PostForm.Get("expires")
-	daysInt, _ := strconv.Atoi(days)
-	expires := time.Now().Add(time.Hour * 24 * time.Duration(daysInt))
-	created := time.Now()
+	form := forms.New(r.PostForm)
+	form.Required("title", "content", "expires")
+	form.MaxLength("title", 100)
+	form.PermittedValues("expires", "1", "3", "7")
 
-	// Map for validation errors
-	errors := make(map[string]string)
+	if !form.Valid() {
+		app.render(w, r, "create.page.tmpl", &templateData{Form: form})
+	} else {
+		days := form.Get("expires")
+		daysInt, _ := strconv.Atoi(days)
+		expires := time.Now().Add(time.Hour * 24 * time.Duration(daysInt))
+		created := time.Now()
 
-	if strings.TrimSpace(title) == "" {
-		errors["title"] = "This field cannot be blank."
-	} else if utf8.RuneCountInString(title) > 100 {
-		errors["title"] = "Title is limited to 100 characters."
+		id, err := app.snips.Insert(form.Get("title"), form.Get("content"), created, expires)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		oid := id.(primitive.ObjectID).Hex()
+
+		http.Redirect(w, r, fmt.Sprintf("/snip/%s", oid), http.StatusSeeOther)
 	}
-
-	if strings.TrimSpace(content) == "" {
-		errors["content"] = "This field cannot be blank."
-	}
-
-	if strings.TrimSpace(days) == "" {
-		errors["days"] = "This field cannot be blank"
-	} else if days != "1" && days != "3" && days != "7" {
-		errors["days"] = "This field is invalid."
-	}
-
-	if len(errors) > 0 {
-		app.render(w, r, "create.page.tmpl", &templateData{
-			FormErrors: errors,
-			FormData:   r.PostForm,
-		})
-		return
-	}
-
-	id, err := app.snips.Insert(title, content, created, expires)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	oid := id.(primitive.ObjectID).Hex()
-
-	http.Redirect(w, r, fmt.Sprintf("/snip/%s", oid), http.StatusSeeOther)
 }

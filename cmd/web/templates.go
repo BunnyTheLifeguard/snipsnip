@@ -1,18 +1,17 @@
 package main
 
 import (
-	"net/url"
 	"path/filepath"
 	"text/template"
 	"time"
 
+	"github.com/BunnyTheLifeguard/snipsnip/pkg/forms"
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/models"
 )
 
 type templateData struct {
 	CurrentYear int
-	FormData    url.Values
-	FormErrors  map[string]string
+	Form        *forms.Form
 	Snip        *models.Snip
 	Snips       []*models.Snip
 }
