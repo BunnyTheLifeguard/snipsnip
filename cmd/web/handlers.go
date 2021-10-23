@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/models"
@@ -44,15 +45,22 @@ func (app *application) showSnip(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createSnipForm(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Create new snip..."))
+	app.render(w, r, "create.page.tmpl", nil)
 }
 
 func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
-	//TODO: Dummy data - remove later
-	title := "3 Snip"
-	content := "3 Snip snip!"
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	title := r.PostForm.Get("title")
+	content := r.PostForm.Get("content")
+	days := r.PostForm.Get("expires")
+	daysInt, _ := strconv.Atoi(days)
+	expires := time.Now().Add(time.Hour * 24 * time.Duration(daysInt))
 	created := time.Now()
-	expires := time.Now().Add(time.Hour * 24 * 7)
 
 	id, err := app.snips.Insert(title, content, created, expires)
 	if err != nil {

@@ -1,0 +1,25 @@
+{{template "base" .}}
+
+{{define "title"}}Create a New Snip{{end}}
+
+{{define "body"}}
+<form action='/snip/create' method='POST'>
+  <div>
+    <label>Title:</label>
+    <input type='text' name='title'>
+  </div>
+  <div>
+    <label>Content:</label>
+    <textarea name='content'></textarea>
+  </div>
+  <div>
+    <label>Delete in:</label>
+      <input type='radio' name='expires' value='1' checked> One Day
+      <input type='radio' name='expires' value='3'> Three Days
+      <input type='radio' name='expires' value='7'> One Week
+  </div>
+  <div>
+    <input type='submit' value='Publish snip'>
+  </div>
+</form>
+{{end}}
