@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/models"
 	"github.com/go-chi/chi/v5"
@@ -61,6 +63,30 @@ func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
 	daysInt, _ := strconv.Atoi(days)
 	expires := time.Now().Add(time.Hour * 24 * time.Duration(daysInt))
 	created := time.Now()
+
+	// Map for validation errors
+	errors := make(map[string]string)
+
+	if strings.TrimSpace(title) == "" {
+		errors["title"] = "This field cannot be blank."
+	} else if utf8.RuneCountInString(title) > 100 {
+		errors["title"] = "Title is limited to 100 characters."
+	}
+
+	if strings.TrimSpace(content) == "" {
+		errors["content"] = "This field cannot be blank."
+	}
+
+	if strings.TrimSpace(days) == "" {
+		errors["days"] = "This field cannot be blank"
+	} else if days != "1" && days != "3" && days != "7" {
+		errors["days"] = "This field is invalid."
+	}
+
+	if len(errors) > 0 {
+		fmt.Fprint(w, errors)
+		return
+	}
 
 	id, err := app.snips.Insert(title, content, created, expires)
 	if err != nil {
