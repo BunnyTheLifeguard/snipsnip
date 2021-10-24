@@ -9,7 +9,7 @@ require (
 )
 
 require (
-	github.com/golangcollege/sessions v1.2.0 // indirect
+	github.com/golangcollege/sessions v1.2.0
 	golang.org/x/sys v0.0.0-20190531175056-4c3a928424d2 // indirect
 )
 
