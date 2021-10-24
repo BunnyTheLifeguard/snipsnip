@@ -82,3 +82,23 @@ func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, fmt.Sprintf("/snip/%s", oid), http.StatusSeeOther)
 	}
 }
+
+func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Display user signup form...")
+}
+
+func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Create a new user...")
+}
+
+func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Display user login form...")
+}
+
+func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "User login...")
+}
+
+func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "User logout...")
+}
