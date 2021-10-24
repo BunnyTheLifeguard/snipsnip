@@ -10,12 +10,13 @@ import (
 
 func (app *application) routes() http.Handler {
 	standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+	dynamicMiddleware := alice.New(app.session.Enable)
 
 	mux := chi.NewRouter()
-	mux.Get("/", app.home)
-	mux.Get("/snip/create", app.createSnipForm)
-	mux.Post("/snip/create", app.createSnip)
-	mux.Get("/snip/{id}", app.showSnip)
+	mux.Get("/", dynamicMiddleware.ThenFunc(app.home).ServeHTTP)
+	mux.Get("/snip/create", dynamicMiddleware.ThenFunc(app.createSnipForm).ServeHTTP)
+	mux.Post("/snip/create", dynamicMiddleware.ThenFunc(app.createSnip).ServeHTTP)
+	mux.Get("/snip/{id}", dynamicMiddleware.ThenFunc(app.showSnip).ServeHTTP)
 
 	filesDir := http.Dir("../../ui/static")
 	fileServer(mux, "/static", filesDir)

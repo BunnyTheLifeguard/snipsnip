@@ -78,6 +78,7 @@ func (app *application) createSnip(w http.ResponseWriter, r *http.Request) {
 		}
 		oid := id.(primitive.ObjectID).Hex()
 
+		app.session.Put(r, "flash", "Snip successfully created.")
 		http.Redirect(w, r, fmt.Sprintf("/snip/%s", oid), http.StatusSeeOther)
 	}
 }

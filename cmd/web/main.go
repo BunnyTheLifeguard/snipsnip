@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/models/mongodb"
+	"github.com/golangcollege/sessions"
 
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,6 +22,7 @@ import (
 type application struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
+	session       *sessions.Session
 	snips         *mongodb.SnipModel
 	templateCache map[string]*template.Template
 }
@@ -37,8 +39,10 @@ func main() {
 	port := os.Getenv("PORT")
 	dbName := os.Getenv("DB")
 	collName := os.Getenv("COLLECTION")
+	sessionSecret := os.Getenv("SECRET")
 
 	addr := flag.String("addr", port, "HTTP network address")
+	secret := flag.String("secret", sessionSecret, "Secret")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -61,9 +65,13 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	session := sessions.New([]byte(*secret))
+	session.Lifetime = 12 * time.Hour
+
 	app := &application{
 		errorLog:      errorLog,
 		infoLog:       infoLog,
+		session:       session,
 		snips:         &mongodb.SnipModel{Collection: coll},
 		templateCache: templateCache,
 	}
