@@ -67,7 +67,7 @@ func (m *SnipModel) Latest() ([]*models.Snip, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.D{{"expires", bson.D{{"$gt", time.Now()}}}}
+	filter := bson.M{"expires": bson.M{"$gt": time.Now()}}
 	opts := options.Find().SetLimit(10)
 	cursor, err := m.Collection.Find(ctx, filter, opts)
 	if err != nil {
