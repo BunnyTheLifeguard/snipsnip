@@ -83,7 +83,7 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
-	errSrv := srv.ListenAndServe()
+	errSrv := srv.ListenAndServeTLS("../../tls/cert.pem", "../../tls/key.pem")
 	errorLog.Fatal(errSrv)
 }
 
