@@ -25,6 +25,7 @@ type application struct {
 	infoLog       *log.Logger
 	session       *sessions.Session
 	snips         *mongodb.SnipModel
+	users         *mongodb.UserModel
 	templateCache map[string]*template.Template
 }
 
@@ -69,11 +70,13 @@ func main() {
 	session := sessions.New([]byte(*secret))
 	session.Lifetime = 12 * time.Hour
 
+	// Add to application dependencies
 	app := &application{
 		errorLog:      errorLog,
 		infoLog:       infoLog,
 		session:       session,
 		snips:         &mongodb.SnipModel{Collection: coll},
+		users:         &mongodb.UserModel{Collection: coll},
 		templateCache: templateCache,
 	}
 
