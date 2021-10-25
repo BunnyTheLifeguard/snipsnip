@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/forms"
-	"github.com/BunnyTheLifeguard/snipsnip/pkg/models"
 	"github.com/go-chi/chi/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +32,7 @@ func (app *application) showSnip(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s, err := app.snips.Get(id)
-	if err == models.ErrNoRecord {
+	if err == mongo.ErrNoDocuments {
 		app.notFound(w)
 		return
 	} else if err != nil {

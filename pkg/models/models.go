@@ -1,19 +1,9 @@
 package models
 
 import (
-	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
-)
-
-var (
-	// ErrNoRecord message
-	ErrNoRecord = errors.New("models: no matching record found")
-	// ErrInvalidCredentials message
-	ErrInvalidCredentials = errors.New("models: invalid credentials")
-	// ErrDuplicateEmail message
-	ErrDuplicateEmail = errors.New("models: duplicate email")
 )
 
 // Snip MongoDB model

@@ -52,9 +52,6 @@ func (m *SnipModel) Get(id string) (*models.Snip, error) {
 	filter := bson.D{{Key: "_id", Value: oid}}
 	resErr := m.Collection.FindOne(ctx, filter).Decode(&result)
 	if resErr != nil {
-		if resErr == mongo.ErrNoDocuments {
-			return nil, resErr
-		}
 		return nil, resErr
 	}
 
