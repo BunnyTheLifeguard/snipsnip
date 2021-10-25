@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/models"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -52,7 +53,27 @@ func (m *UserModel) Insert(name, email, password string) error {
 
 // Authenticate verifies if the user exists and returns the user id
 func (m *UserModel) Authenticate(email, password string) (string, error) {
-	return "", nil
+	// var id string
+	var result *models.User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "email", Value: email}}
+	err := m.Collection.FindOne(ctx, filter).Decode(&result)
+	if err == mongo.ErrNoDocuments {
+		return "", models.ErrInvalidCredentials
+	} else if err != nil {
+		return "", err
+	}
+
+	err = bcrypt.CompareHashAndPassword(result.HashedPassword, []byte(password))
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return "", models.ErrInvalidCredentials
+	} else if err != nil {
+		return "", err
+	}
+
+	return result.ID, err
 }
 
 // Get fetches details of user with specified user id
