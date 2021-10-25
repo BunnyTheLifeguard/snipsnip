@@ -1,9 +1,19 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+var (
+	// ErrInvalidCredentials message
+	ErrInvalidCredentials = errors.New("models: invalid credentials")
+	// ErrDuplicateName message
+	ErrDuplicateName = errors.New("models: duplicate name")
+	// ErrDuplicateEmail message
+	ErrDuplicateEmail = errors.New("models: duplicate email")
 )
 
 // Snip MongoDB model

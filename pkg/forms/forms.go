@@ -3,9 +3,13 @@ package forms
 import (
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
+
+// EmailRX is used to check email address format
+var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 // Form struct embeds a url.Values object to hold form data & validation errors
 type Form struct {
@@ -42,6 +46,17 @@ func (f *Form) MaxLength(field string, d int) {
 	}
 }
 
+// MinLength checks the number of characters in a field
+func (f *Form) MinLength(field string, d int) {
+	value := f.Get(field)
+	if value == "" {
+		return
+	}
+	if utf8.RuneCountInString(value) < d {
+		f.Errors.Add(field, fmt.Sprintf("This field must have at least %d characters", d))
+	}
+}
+
 // PermittedValues checks if a specific field matches a set of permitted values
 func (f *Form) PermittedValues(field string, opts ...string) {
 	value := f.Get(field)
@@ -54,6 +69,17 @@ func (f *Form) PermittedValues(field string, opts ...string) {
 		}
 	}
 	f.Errors.Add(field, "This field is invalid.")
+}
+
+// MatchesPattern checks if the entered email address value is valid
+func (f *Form) MatchesPattern(field string, pattern *regexp.Regexp) {
+	value := f.Get(field)
+	if value == "" {
+		return
+	}
+	if !pattern.MatchString(value) {
+		f.Errors.Add(field, "The email address is invalid.")
+	}
 }
 
 // Valid returns true if no errors present

@@ -40,7 +40,8 @@ func init() {
 func main() {
 	port := os.Getenv("PORT")
 	dbName := os.Getenv("DB")
-	collName := os.Getenv("COLLECTION")
+	dataCollName := os.Getenv("DATA")
+	userCollName := os.Getenv("USERS")
 	sessionSecret := os.Getenv("SECRET")
 
 	addr := flag.String("addr", port, "HTTP network address")
@@ -58,7 +59,9 @@ func main() {
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-	coll := openCollection(db, dbName, collName)
+	// Get respective collections from DB
+	dataColl := openCollection(db, dbName, dataCollName)
+	userColl := openCollection(db, dbName, userCollName)
 
 	defer db.Disconnect(ctx)
 
@@ -75,8 +78,8 @@ func main() {
 		errorLog:      errorLog,
 		infoLog:       infoLog,
 		session:       session,
-		snips:         &mongodb.SnipModel{Collection: coll},
-		users:         &mongodb.UserModel{Collection: coll},
+		snips:         &mongodb.SnipModel{Collection: dataColl},
+		users:         &mongodb.UserModel{Collection: userColl},
 		templateCache: templateCache,
 	}
 
