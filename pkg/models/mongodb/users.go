@@ -78,5 +78,21 @@ func (m *UserModel) Authenticate(email, password string) (string, error) {
 
 // Get fetches details of user with specified user id
 func (m *UserModel) Get(id string) (*models.User, error) {
-	return nil, nil
+	var result *models.User
+
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "_id", Value: oid}}
+	resErr := m.Collection.FindOne(ctx, filter).Decode(&result)
+	if resErr != nil {
+		return nil, resErr
+	}
+
+	return result, nil
 }
