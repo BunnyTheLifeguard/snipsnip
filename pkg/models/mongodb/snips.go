@@ -55,7 +55,7 @@ func (m *SnipModel) Get(id string) (*models.Snip, error) {
 		return nil, resErr
 	}
 
-	return result, err
+	return result, nil
 }
 
 // Latest shows the most recently created 10 snips unless expired
