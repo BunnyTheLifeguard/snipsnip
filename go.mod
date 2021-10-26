@@ -8,6 +8,8 @@ require (
 	go.mongodb.org/mongo-driver v1.7.3
 )
 
+require github.com/justinas/nosurf v1.1.1 // indirect
+
 require (
 	github.com/golangcollege/sessions v1.2.0
 	golang.org/x/sys v0.0.0-20190531175056-4c3a928424d2 // indirect
