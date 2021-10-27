@@ -108,10 +108,6 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = app.users.Insert(form.Get("name"), form.Get("email"), form.Get("password"))
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
 
 	if err == models.ErrDuplicateName {
 		form.Errors.Add("name", "Username already in use.")
@@ -120,6 +116,9 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
 	} else if err == models.ErrDuplicateEmail {
 		form.Errors.Add("email", "Address already in use.")
 		app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
+		return
+	} else if err != nil {
+		app.serverError(w, err)
 		return
 	}
 
