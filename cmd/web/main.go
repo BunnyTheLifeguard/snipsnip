@@ -15,6 +15,7 @@ import (
 	"github.com/golangcollege/sessions"
 
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -63,11 +64,40 @@ func main() {
 	if err != nil {
 		errorLog.Fatal(err)
 	}
+	defer db.Disconnect(ctx)
+
 	// Get respective collections from DB
 	dataColl := openCollection(db, dbName, dataCollName)
 	userColl := openCollection(db, dbName, userCollName)
 
-	defer db.Disconnect(ctx)
+	// Create TTL & unique indexes
+	_, err = dataColl.Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys:    bson.D{{Key: "expires", Value: 1}},
+			Options: options.Index().SetExpireAfterSeconds(0),
+		},
+	)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
+	_, err = userColl.Indexes().CreateMany(
+		context.Background(),
+		[]mongo.IndexModel{
+			{
+				Keys:    bson.D{{Key: "name", Value: 1}},
+				Options: options.Index().SetUnique(true),
+			},
+			{
+				Keys:    bson.D{{Key: "email", Value: 1}},
+				Options: options.Index().SetUnique(true),
+			},
+		},
+	)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
 
 	templateCache, err := newTemplateCache("../../ui/html/")
 	if err != nil {
