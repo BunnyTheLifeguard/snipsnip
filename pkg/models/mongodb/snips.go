@@ -65,7 +65,7 @@ func (m *SnipModel) Latest() ([]*models.Snip, error) {
 	defer cancel()
 
 	filter := bson.M{"expires": bson.M{"$gt": time.Now()}}
-	opts := options.Find().SetLimit(10)
+	opts := options.Find().SetLimit(10).SetSort(bson.D{{Key: "created", Value: -1}})
 	cursor, err := m.Collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
