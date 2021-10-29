@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"testing"
 )
@@ -24,6 +25,19 @@ type testServer struct {
 // Initialize and return a new instance of the custom testServer type
 func newTestServer(t *testing.T, h http.Handler) *testServer {
 	ts := httptest.NewTLSServer(h)
+
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Add cookiejar to client => Response cookies are stored and sent with subsequent requests
+	ts.Client().Jar = jar
+
+	// Disable redirect-following for client
+	ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+
 	return &testServer{ts}
 }
 
