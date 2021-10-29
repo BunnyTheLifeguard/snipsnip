@@ -75,7 +75,7 @@ func main() {
 		context.Background(),
 		mongo.IndexModel{
 			Keys:    bson.D{{Key: "expires", Value: 1}},
-			Options: options.Index().SetExpireAfterSeconds(0),
+			Options: options.Index().SetExpireAfterSeconds(1),
 		},
 	)
 	if err != nil {
