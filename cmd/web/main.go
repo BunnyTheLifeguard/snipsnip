@@ -11,6 +11,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/BunnyTheLifeguard/snipsnip/pkg/models"
 	"github.com/BunnyTheLifeguard/snipsnip/pkg/models/mongodb"
 	"github.com/golangcollege/sessions"
 
@@ -29,9 +30,17 @@ type application struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
 	session       *sessions.Session
-	snips         *mongodb.SnipModel
-	users         *mongodb.UserModel
 	templateCache map[string]*template.Template
+	snips         interface {
+		Insert(string, string, time.Time, time.Time) (interface{}, error)
+		Get(string) (*models.Snip, error)
+		Latest() ([]*models.Snip, error)
+	}
+	users interface {
+		Insert(string, string, string) error
+		Authenticate(string, string) (string, error)
+		Get(string) (*models.User, error)
+	}
 }
 
 func init() {
